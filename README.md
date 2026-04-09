@@ -37,9 +37,34 @@ Agent edits src/auth.ts
 
 No API keys. No external services. The agent IS the runtime.
 
-## Claude Code Skill
+## Installation
 
-This is the primary interface. See [skill.md](./skill.md).
+### Via skills.sh (recommended)
+
+```bash
+npx skills add Howell5/willhong-skills -s graphify
+```
+
+This installs the graphify skill into your agent's skill directory. On first use, run `bun install` inside the skill directory to fetch tree-sitter WASM grammars.
+
+### Per-agent setup
+
+| Agent | Install | Invoke |
+|-------|---------|--------|
+| **Claude Code** | `npx skills add Howell5/willhong-skills -s graphify` | `/graphify build` |
+| **Cursor** | `npx skills add Howell5/willhong-skills -s graphify -a cursor` | `/graphify build` |
+| **Cline** | `npx skills add Howell5/willhong-skills -s graphify -a cline` | `/graphify build` |
+| **Copilot** | `npx skills add Howell5/willhong-skills -s graphify -a copilot` | `/graphify build` |
+| **All agents** | `npx skills add Howell5/willhong-skills -s graphify -a '*'` | `/graphify build` |
+
+### Manual install
+
+```bash
+git clone https://github.com/Howell5/graphify-ts.git ~/.claude/skills/graphify
+cd ~/.claude/skills/graphify && bun install
+```
+
+## Commands
 
 ```
 /graphify build         — index the current project
@@ -47,6 +72,8 @@ This is the primary interface. See [skill.md](./skill.md).
 /graphify update <file> — re-index after editing
 /graphify label         — agent assigns semantic domain labels
 ```
+
+See [skill.md](./skill.md) for the full skill definition.
 
 ## Supported Languages
 

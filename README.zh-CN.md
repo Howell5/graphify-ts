@@ -37,9 +37,34 @@ Agent 编辑了 src/auth.ts
 
 不需要 API key。不需要外部服务。Agent 自身就是运行时。
 
-## Claude Code Skill
+## 安装
 
-这是主要的使用接口。详见 [skill.md](./skill.md)。
+### 通过 skills.sh（推荐）
+
+```bash
+npx skills add Howell5/willhong-skills -s graphify
+```
+
+这会将 graphify skill 安装到你的 agent skill 目录。首次使用时，在 skill 目录下运行 `bun install` 以获取 tree-sitter WASM 语法包。
+
+### 各 Agent 安装方式
+
+| Agent | 安装 | 调用 |
+|-------|------|------|
+| **Claude Code** | `npx skills add Howell5/willhong-skills -s graphify` | `/graphify build` |
+| **Cursor** | `npx skills add Howell5/willhong-skills -s graphify -a cursor` | `/graphify build` |
+| **Cline** | `npx skills add Howell5/willhong-skills -s graphify -a cline` | `/graphify build` |
+| **Copilot** | `npx skills add Howell5/willhong-skills -s graphify -a copilot` | `/graphify build` |
+| **所有 Agent** | `npx skills add Howell5/willhong-skills -s graphify -a '*'` | `/graphify build` |
+
+### 手动安装
+
+```bash
+git clone https://github.com/Howell5/graphify-ts.git ~/.claude/skills/graphify
+cd ~/.claude/skills/graphify && bun install
+```
+
+## 命令
 
 ```
 /graphify build         — 索引当前项目
@@ -47,6 +72,8 @@ Agent 编辑了 src/auth.ts
 /graphify update <file> — 编辑后重新索引
 /graphify label         — Agent 分配语义领域标签
 ```
+
+详见 [skill.md](./skill.md)。
 
 ## 支持的语言
 
