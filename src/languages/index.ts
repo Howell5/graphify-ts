@@ -52,6 +52,16 @@ export function supportedExtensions(): string[] {
 registerLanguage("python", () => import("./python").then((m) => m.config));
 registerLanguage("javascript", () => import("./javascript").then((m) => m.config));
 registerLanguage("typescript", () => import("./javascript").then((m) => m.tsConfig));
+registerLanguage("go", () => import("./go").then((m) => m.config));
+registerLanguage("rust", () => import("./rust").then((m) => m.config));
+registerLanguage("java", () => import("./java").then((m) => m.config));
+registerLanguage("c", () => import("./c").then((m) => m.cConfig));
+registerLanguage("cpp", () => import("./c").then((m) => m.cppConfig));
+registerLanguage("ruby", () => import("./ruby").then((m) => m.config));
+registerLanguage("csharp", () => import("./csharp").then((m) => m.config));
+registerLanguage("kotlin", () => import("./kotlin").then((m) => m.config));
+registerLanguage("scala", () => import("./scala").then((m) => m.config));
+registerLanguage("php", () => import("./php").then((m) => m.config));
 
 export type {
   LanguageConfig,
