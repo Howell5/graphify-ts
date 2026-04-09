@@ -3,67 +3,64 @@
 ## 安装
 
 ```bash
-bun add graphify-ts
+npm i -g graphify-ts
 ```
 
-或者克隆到本地使用：
+需要 [Bun](https://bun.sh) 运行时。
+
+## 安装 Skill（可选）
+
+Skill 会教你的 AI agent 如何自动使用 CLI：
 
 ```bash
-git clone https://github.com/Howell5/graphify-ts.git
-cd graphify-ts
-bun install
+npx skills add Howell5/willhong-skills -s graphify
 ```
 
-## 你的第一个索引
+不装 skill 也可以直接用 CLI。
 
-### 1. 构建索引
+## 构建第一个索引
 
-```typescript
-import { buildIndex } from 'graphify-ts'
-
-const index = await buildIndex('./src', {
-  outputDir: './graphify-out'
-})
-
-console.log(`索引了 ${index.metadata.files} 个文件`)
-console.log(`发现了 ${index.metadata.nodes} 个符号`)
-console.log(`发现了 ${index.metadata.edges} 个关系`)
+```bash
+cd your-project
+graphify build .
 ```
 
-这会扫描 `./src` 中所有支持的源文件，提取 AST 结构，并将结果保存到 `./graphify-out/graph.json`。
-
-### 2. 查询索引
-
-```typescript
-import { query } from 'graphify-ts'
-
-const results = await query('./graphify-out/graph.json', 'UserService')
-
-for (const node of results) {
-  console.log(`${node.label} → ${node.sourceFile}:${node.sourceLocation}`)
-}
+输出：
+```
+Scanning /path/to/your-project...
+Indexed 42 files, 187 symbols, 214 relationships
+Saved to /path/to/your-project/graphify-out/graph.json
 ```
 
-### 3. 保持更新
+## 查询索引
 
-编辑文件后，增量更新索引：
-
-```typescript
-import { updateIndex } from 'graphify-ts'
-
-const diff = await updateIndex('./graphify-out/graph.json', [
-  'src/auth.ts',
-  'src/models/user.ts'
-])
-
-console.log(`新增 ${diff.added} 个节点，删除 ${diff.removed} 个节点`)
+```bash
+graphify query graphify-out/graph.json UserService
 ```
 
-只有变更的文件会被重新提取，其他的保持缓存。
+输出：
+```
+UserService → src/services/user.ts:12
+.getUser → src/services/user.ts:15
+.deleteUser → src/services/user.ts:28
+```
+
+## 编辑后更新
+
+编辑文件后，只重新索引变更的文件：
+
+```bash
+graphify update graphify-out/graph.json src/services/user.ts
+```
+
+输出：
+```
+Updated: +2 nodes, -1 nodes, 1 files re-extracted
+```
 
 ## 提取了什么
 
-对于每个源文件，graphify-ts 提取：
+对于每个源文件，graphify 提取：
 
 | 实体 | 示例 | 节点标签 |
 |------|------|---------|
@@ -82,45 +79,22 @@ console.log(`新增 ${diff.added} 个节点，删除 ${diff.removed} 个节点`)
 | 类 → 方法 | "这个类有这个方法" |
 | 文件 → 模块 | "这个文件导入了这个模块" |
 | 类 → 类 | "这个类继承自那个类" |
-| 函数 → 函数 | "这个函数调用了那个函数" |
+| 函数 → 函数 | "这个函数调用了那个函数"（INFERRED） |
 
-## 输出示例
+## 配合 AI Agent 使用
 
-给定这个 Python 文件：
+安装 skill 后，agent 可以使用斜杠命令：
 
-```python
-# auth.py
-import hashlib
-from database import get_user
-
-class AuthService:
-    def login(self, username, password):
-        user = get_user(username)
-        return self.verify(user, password)
-
-    def verify(self, user, password):
-        hashed = hashlib.sha256(password.encode()).hexdigest()
-        return user.password == hashed
+```
+/graphify build         — 索引当前项目
+/graphify query auth    — 查找认证相关符号
+/graphify update file   — 编辑后重新索引
 ```
 
-graphify-ts 产出：
-
-**节点：**
-- `file::auth` (auth.py)
-- `auth::authservice` (AuthService)
-- `auth::authservice::login` (.login)
-- `auth::authservice::verify` (.verify)
-
-**边：**
-- `file::auth` → `auth::authservice` (contains / 包含)
-- `auth::authservice` → `auth::authservice::login` (method / 方法)
-- `auth::authservice` → `auth::authservice::verify` (method / 方法)
-- `file::auth` → `mod::hashlib` (imports / 导入)
-- `file::auth` → `mod::database::get_user` (imports_from / 从模块导入)
-- `auth::authservice::login` → `verify` (calls / 调用, INFERRED)
+Agent 通过结构导航，而不是靠 grep 猜测。
 
 ## 下一步
 
 - [高级用法](./advanced-usage.zh-CN.md) — 图谱查询、语义标注、diff
-- [Claude Code 集成](./claude-code-integration.zh-CN.md) — 作为 Claude Code skill 使用
+- [Claude Code 集成](./claude-code-integration.zh-CN.md) — hooks 和自动更新
 - [添加语言支持](./adding-languages.zh-CN.md) — 扩展新的语言支持

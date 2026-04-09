@@ -1,69 +1,66 @@
 # Getting Started
 
-## Installation
+## Install
 
 ```bash
-bun add graphify-ts
+npm i -g graphify-ts
 ```
 
-Or clone and use locally:
+Requires [Bun](https://bun.sh) runtime.
+
+## Install the Skill (optional)
+
+The skill teaches your AI agent how to use the CLI automatically:
 
 ```bash
-git clone https://github.com/Howell5/graphify-ts.git
-cd graphify-ts
-bun install
+npx skills add Howell5/willhong-skills -s graphify
 ```
 
-## Your First Index
+Without the skill, you (or your agent) can still use the CLI directly.
 
-### 1. Build the index
+## Build Your First Index
 
-```typescript
-import { buildIndex } from 'graphify-ts'
-
-const index = await buildIndex('./src', {
-  outputDir: './graphify-out'
-})
-
-console.log(`Indexed ${index.metadata.files} files`)
-console.log(`Found ${index.metadata.nodes} symbols`)
-console.log(`Discovered ${index.metadata.edges} relationships`)
+```bash
+cd your-project
+graphify build .
 ```
 
-This scans all supported source files in `./src`, extracts their AST structure, and saves the result to `./graphify-out/graph.json`.
-
-### 2. Query the index
-
-```typescript
-import { query } from 'graphify-ts'
-
-const results = await query('./graphify-out/graph.json', 'UserService')
-
-for (const node of results) {
-  console.log(`${node.label} → ${node.sourceFile}:${node.sourceLocation}`)
-}
+Output:
+```
+Scanning /path/to/your-project...
+Indexed 42 files, 187 symbols, 214 relationships
+Saved to /path/to/your-project/graphify-out/graph.json
 ```
 
-### 3. Keep it updated
+## Query the Index
 
-After editing files, update the index incrementally:
-
-```typescript
-import { updateIndex } from 'graphify-ts'
-
-const diff = await updateIndex('./graphify-out/graph.json', [
-  'src/auth.ts',
-  'src/models/user.ts'
-])
-
-console.log(`Added ${diff.added} nodes, removed ${diff.removed} nodes`)
+```bash
+graphify query graphify-out/graph.json UserService
 ```
 
-Only the changed files are re-extracted. Everything else stays cached.
+Output:
+```
+UserService → src/services/user.ts:12
+.getUser → src/services/user.ts:15
+.deleteUser → src/services/user.ts:28
+```
+
+## Update After Edits
+
+After editing files, re-index only the changed ones:
+
+```bash
+graphify update graphify-out/graph.json src/services/user.ts
+```
+
+Output:
+```
+Updated: +2 nodes, -1 nodes, 1 files re-extracted
+```
 
 ## What Gets Extracted
 
-For each source file, graphify-ts extracts:
+For each source file, graphify extracts:
 
 | Entity | Example | Node Label |
 |--------|---------|------------|
@@ -82,45 +79,22 @@ And these relationships:
 | Class → Method | "this class has this method" |
 | File → Module | "this file imports this module" |
 | Class → Class | "this class inherits from that class" |
-| Function → Function | "this function calls that function" |
+| Function → Function | "this function calls that function" (INFERRED) |
 
-## Example Output
+## With an AI Agent
 
-Given this Python file:
+Once the skill is installed, your agent can use slash commands:
 
-```python
-# auth.py
-import hashlib
-from database import get_user
-
-class AuthService:
-    def login(self, username, password):
-        user = get_user(username)
-        return self.verify(user, password)
-
-    def verify(self, user, password):
-        hashed = hashlib.sha256(password.encode()).hexdigest()
-        return user.password == hashed
+```
+/graphify build         — index the current project
+/graphify query auth    — find auth-related symbols
+/graphify update file   — re-index after editing
 ```
 
-graphify-ts produces:
-
-**Nodes:**
-- `file::auth` (auth.py)
-- `auth::authservice` (AuthService)
-- `auth::authservice::login` (.login)
-- `auth::authservice::verify` (.verify)
-
-**Edges:**
-- `file::auth` → `auth::authservice` (contains)
-- `auth::authservice` → `auth::authservice::login` (method)
-- `auth::authservice` → `auth::authservice::verify` (method)
-- `file::auth` → `mod::hashlib` (imports)
-- `file::auth` → `mod::database::get_user` (imports_from)
-- `auth::authservice::login` → `verify` (calls, INFERRED)
+The agent navigates by structure instead of grep-guessing.
 
 ## Next Steps
 
 - [Advanced Usage](./advanced-usage.md) — graph queries, semantic labeling, diff
-- [Claude Code Integration](./claude-code-integration.md) — using as a Claude Code skill
+- [Claude Code Integration](./claude-code-integration.md) — hooks and auto-update
 - [Adding Languages](./adding-languages.md) — extending with new language support

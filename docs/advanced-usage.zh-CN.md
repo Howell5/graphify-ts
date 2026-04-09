@@ -1,22 +1,20 @@
 # 高级用法
 
+这些是用于在 graphify-ts 之上构建自定义 agent 工具的编程 API。大多数用户只需要 CLI（`graphify build/query/update`）。
+
 ## 图谱查询 API
 
-构建索引后，可以对图谱结构进行丰富的查询。
-
-### 符号搜索
-
 ```typescript
-import { buildGraph, mergeExtractions } from 'graphify-ts'
+import { buildGraph } from 'graphify-ts'
 import { findSymbol, callersOf, calleesOf, fileSymbols, shortestPath } from 'graphify-ts'
+import { readFileSync } from 'node:fs'
 
 // 加载图谱
-const index = JSON.parse(await Bun.file('graphify-out/graph.json').text())
+const index = JSON.parse(readFileSync('graphify-out/graph.json', 'utf-8'))
 const graph = buildGraph({ nodes: index.nodes, edges: index.edges })
 
 // 查找所有匹配 "auth" 的符号（不区分大小写）
 const authSymbols = findSymbol(graph, 'auth')
-// → [{ id: 'auth::login', label: 'login', sourceFile: 'auth.py', ... }]
 ```
 
 ### 调用图遍历
@@ -36,7 +34,6 @@ const callees = calleesOf(graph, 'main::setup')
 ```typescript
 // auth.py 中定义了哪些符号？
 const symbols = fileSymbols(graph, 'auth.py')
-// → [{ id: 'auth::login', label: 'login' }, { id: 'auth::verify', label: 'verify' }]
 ```
 
 ### 路径查找
@@ -45,14 +42,9 @@ const symbols = fileSymbols(graph, 'auth.py')
 // 两个远距离的符号如何连接？
 const path = shortestPath(graph, 'main::app', 'utils::helper')
 // → ['main::app', 'main::setup', 'utils::helper']
-// 含义: App → setup() → helper()（通过 calls 边）
 ```
 
 ## 语义标注
-
-使用 Claude 为图谱添加领域标签。
-
-### 基本用法
 
 `labelNodes` 接受任何符合 `SemanticLabeler` 接口的函数。在 Claude Code 中运行时，agent 自身提供标注逻辑——不需要 API key。
 
@@ -62,7 +54,6 @@ import { labelNodes, type SemanticLabeler } from 'graphify-ts'
 const labeler: SemanticLabeler = async (nodes) => {
   const labels = new Map<string, string[]>()
   for (const node of nodes) {
-    // 你的逻辑——启发式规则、LLM 调用等
     if (node.label.includes('auth')) labels.set(node.id, ['authentication'])
   }
   return labels
@@ -71,45 +62,13 @@ const labeler: SemanticLabeler = async (nodes) => {
 await labelNodes(graph, labeler)
 ```
 
-标注后，节点会获得 `semanticLabels` 字段：
-```json
-{
-  "id": "auth::login",
-  "label": "login",
-  "semanticLabels": ["authentication", "user-session"]
-}
-```
-
-### 自定义标注器
-
-你可以提供自己的标注函数：
+### 选项
 
 ```typescript
-import type { SemanticLabeler } from 'graphify-ts'
-
-const myLabeler: SemanticLabeler = async (nodes) => {
-  const labels = new Map<string, string[]>()
-  for (const node of nodes) {
-    // 你的自定义逻辑
-    if (node.label.includes('auth')) {
-      labels.set(node.id, ['authentication'])
-    }
-  }
-  return labels
-}
-
-await labelNodes(graph, myLabeler)
-```
-
-### 跳过已标注的节点
-
-```typescript
+// 跳过已有标签的节点
 await labelNodes(graph, labeler, { skipLabeled: true })
-```
 
-### 批量大小控制
-
-```typescript
+// 控制批量大小
 await labelNodes(graph, labeler, { batchSize: 25 })
 ```
 
@@ -121,22 +80,13 @@ await labelNodes(graph, labeler, { batchSize: 25 })
 import { graphDiff } from 'graphify-ts'
 
 const diff = graphDiff(oldGraph, newGraph)
-
 console.log(diff.summary)
 // → "3 new nodes, 1 node removed, 2 new edges"
-
-for (const node of diff.newNodes) {
-  console.log(`+ ${node.label}`)
-}
-
-for (const node of diff.removedNodes) {
-  console.log(`- ${node.label}`)
-}
 ```
 
 ## 缓存
 
-graphify-ts 使用 SHA256 哈希为每个文件缓存提取结果。当你调用 `buildIndex` 或 `updateIndex` 时：
+graphify-ts 使用 SHA256 哈希为每个文件缓存提取结果。运行 `graphify build` 或 `graphify update` 时：
 
 1. 每个文件的内容 + 路径被哈希
 2. 如果哈希匹配缓存条目，使用缓存结果
@@ -166,20 +116,12 @@ graph.size         // 边数量
 graph.nodes()      // 所有节点 ID
 graph.neighbors(id) // 相邻节点
 
-// 遍历节点
+// 遍历
 graph.forEachNode((id, attrs) => {
   console.log(id, attrs.label, attrs.sourceFile)
 })
 
-// 遍历边
 graph.forEachEdge((key, attrs, source, target) => {
   console.log(`${source} --${attrs.relation}--> ${target}`)
 })
-
-// 序列化存储
-const json = serializeGraph(graph)
-await Bun.write('graph.json', json)
-
-// 稍后恢复
-const restored = deserializeGraph(await Bun.file('graph.json').text())
 ```
