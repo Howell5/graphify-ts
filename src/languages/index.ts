@@ -48,8 +48,10 @@ export function supportedExtensions(): string[] {
   return [...extensionMap.keys()];
 }
 
-// Register languages (only python for now, others will be added in Tasks 6-7)
+// Register languages
 registerLanguage("python", () => import("./python").then((m) => m.config));
+registerLanguage("javascript", () => import("./javascript").then((m) => m.config));
+registerLanguage("typescript", () => import("./javascript").then((m) => m.tsConfig));
 
 export type {
   LanguageConfig,
