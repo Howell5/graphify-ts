@@ -1,6 +1,6 @@
 ---
 name: graphify
-description: Build and query a code navigation graph for the current project. Extracts AST structure (classes, functions, imports, calls) from 12 languages via tree-sitter. Use when exploring unfamiliar code, before searching, or after editing files. Trigger: /graphify
+description: "Build and query a code navigation graph for the current project. Extracts AST structure (classes, functions, imports, calls) from 12 languages via tree-sitter. Use when exploring unfamiliar code, before searching, or after editing files. Trigger: /graphify"
 ---
 
 # graphify - Agent Code Navigation Layer
