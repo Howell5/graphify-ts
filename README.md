@@ -2,151 +2,57 @@ English | [简体中文](./README.zh-CN.md)
 
 # graphify-ts
 
-A code navigation layer for AI agents. Extracts AST structure from 12 programming languages via tree-sitter WASM, builds a queryable knowledge graph, and keeps it in sync as code changes.
+A code navigation layer for AI coding agents. Not a library for humans to install — a skill that gives agents structural awareness of any codebase.
 
-**Not a visualization tool.** This is an always-on structural index that helps agents navigate codebases by understanding what exists, where, and how it connects — before they grep.
+Built on tree-sitter WASM (12 languages) + graphology. Runs inside Claude Code as a skill.
 
-## Why
+## What It Does
 
 When an AI agent lands in an unfamiliar codebase, it guesses which files to read. It greps for keywords. It opens wrong files. It wastes tokens.
 
-graphify-ts solves this by giving the agent a map:
-- **What symbols exist** (classes, functions, imports)
-- **Where they live** (file + line number)
-- **How they connect** (call graph, inheritance, imports)
-- **What they mean** (optional LLM semantic labels)
+graphify-ts gives the agent a structural map:
+- **What symbols exist** — classes, functions, imports across 12 languages
+- **Where they live** — file + line number
+- **How they connect** — call graph, inheritance, import relationships
+- **What they mean** — optional semantic labels (the agent itself provides these)
 
-The agent queries the map instead of searching blind.
+The agent queries the map instead of searching blind. After editing code, it updates the map to keep it in sync.
 
-## Quick Start
+## How It Works
 
-```bash
-# Install
-bun add graphify-ts
+```
+Agent starts session
+  → /graphify build
+  → graphify-out/graph.json created (AST index of entire codebase)
 
-# Build index for a project
-import { buildIndex } from 'graphify-ts'
-const index = await buildIndex('./src')
-// → graphify-out/graph.json
+Agent needs to find auth code
+  → /graphify query auth
+  → returns: auth::login (src/auth.ts:15), auth::middleware (src/middleware.ts:8)
+  → agent reads the right files directly
 
-# Query it
-import { query } from 'graphify-ts'
-const results = await query('graphify-out/graph.json', 'Auth')
-// → [{ id: 'auth::login', label: 'login', sourceFile: 'auth.py', sourceLocation: 'auth.py:5' }]
+Agent edits src/auth.ts
+  → /graphify update src/auth.ts
+  → graph updated incrementally (only re-extracts changed file)
+```
 
-# Update after editing files
-import { updateIndex } from 'graphify-ts'
-await updateIndex('graphify-out/graph.json', ['src/auth.py'])
-// → { added: 2, removed: 1, updated: 1 }
+No API keys. No external services. The agent IS the runtime.
+
+## Claude Code Skill
+
+This is the primary interface. See [skill.md](./skill.md).
+
+```
+/graphify build         — index the current project
+/graphify query <name>  — find symbols by name
+/graphify update <file> — re-index after editing
+/graphify label         — agent assigns semantic domain labels
 ```
 
 ## Supported Languages
 
-| Language | Extensions | AST Features |
-|----------|-----------|-------------|
-| Python | `.py` | classes, functions, imports, inheritance, call graph |
-| JavaScript | `.js`, `.jsx` | classes, functions, arrow functions, imports, call graph |
-| TypeScript | `.ts`, `.tsx` | classes, functions, arrow functions, imports, call graph |
-| Go | `.go` | functions, imports, call graph |
-| Rust | `.rs` | structs, enums, traits, functions, use declarations, call graph |
-| Java | `.java` | classes, interfaces, methods, constructors, imports, call graph |
-| C | `.c`, `.h` | functions, includes, call graph |
-| C++ | `.cpp`, `.cc`, `.cxx`, `.hpp` | classes, functions, includes, call graph |
-| Ruby | `.rb` | classes, methods, call graph |
-| C# | `.cs` | classes, interfaces, methods, using directives, call graph |
-| Kotlin | `.kt`, `.kts` | classes, objects, functions, imports, call graph |
-| Scala | `.scala` | classes, objects, functions, imports, call graph |
-| PHP | `.php` | classes, functions, methods, namespace uses, call graph |
+Python, JavaScript, TypeScript (JSX/TSX), Go, Rust, Java, C, C++, Ruby, C#, Kotlin, Scala, PHP
 
-## API
-
-### `buildIndex(dir, options?)`
-
-Scan a directory and build a full knowledge graph.
-
-```typescript
-const index = await buildIndex('./src', {
-  outputDir: './graphify-out'  // optional, defaults to <dir>/../graphify-out
-})
-```
-
-Returns a `GraphifyIndex` with `nodes`, `edges`, and `metadata`.
-
-### `query(graphPath, question)`
-
-Search the graph for symbols matching a name.
-
-```typescript
-const results = await query('graphify-out/graph.json', 'UserService')
-// Returns: GraphNode[] with id, label, sourceFile, sourceLocation
-```
-
-### `updateIndex(graphPath, changedFiles)`
-
-Incrementally update the graph after editing files. Only re-extracts the changed files.
-
-```typescript
-const diff = await updateIndex('graphify-out/graph.json', [
-  'src/auth.ts',
-  'src/database.ts'
-])
-// Returns: { added: number, removed: number, updated: number }
-```
-
-### `extractFile(filePath)`
-
-Extract AST nodes and edges from a single file.
-
-```typescript
-import { extractFile } from 'graphify-ts'
-const result = await extractFile('src/main.py')
-// Returns: { nodes: NodeDict[], edges: EdgeDict[] }
-```
-
-### Graph Query Functions
-
-```typescript
-import { findSymbol, callersOf, calleesOf, fileSymbols, shortestPath } from 'graphify-ts'
-
-// Find symbols by name (case-insensitive)
-findSymbol(graph, 'login')
-
-// Who calls this function?
-callersOf(graph, 'auth::hash_password')
-
-// What does this function call?
-calleesOf(graph, 'main::setup')
-
-// All symbols in a file
-fileSymbols(graph, 'src/auth.py')
-
-// How are two symbols connected?
-shortestPath(graph, 'main::app', 'utils::helper')
-```
-
-### Semantic Labeling
-
-Add domain labels to symbols using Claude:
-
-```typescript
-import { labelNodes, createClaudeLabeler } from 'graphify-ts'
-
-const labeler = createClaudeLabeler()  // uses ANTHROPIC_API_KEY
-await labelNodes(graph, labeler)
-
-// Now nodes have semanticLabels: ["authentication", "security"]
-```
-
-### Graph Diff
-
-Compare two graph snapshots:
-
-```typescript
-import { graphDiff } from 'graphify-ts'
-
-const diff = graphDiff(oldGraph, newGraph)
-// { newNodes, removedNodes, newEdges, removedEdges, summary }
-```
+All via tree-sitter WASM — deterministic AST extraction, no LLM needed for structure.
 
 ## Graph Schema
 
@@ -157,22 +63,15 @@ const diff = graphDiff(oldGraph, newGraph)
     "label": "App",
     "fileType": "code",
     "sourceFile": "main.py",
-    "sourceLocation": "main.py:5",
-    "semanticLabels": ["application", "entry-point"]
+    "sourceLocation": "main.py:5"
   }],
   "edges": [{
     "source": "file::main",
     "target": "main::app",
     "relation": "contains",
-    "confidence": "EXTRACTED",
-    "weight": 1.0
+    "confidence": "EXTRACTED"
   }],
-  "metadata": {
-    "files": 10,
-    "nodes": 45,
-    "edges": 62,
-    "builtAt": "2026-04-09T06:00:00.000Z"
-  }
+  "metadata": { "files": 10, "nodes": 45, "edges": 62 }
 }
 ```
 
@@ -183,15 +82,26 @@ const diff = graphDiff(oldGraph, newGraph)
 | `contains` | EXTRACTED | File contains a class/function |
 | `method` | EXTRACTED | Class contains a method |
 | `imports` | EXTRACTED | File imports a module |
-| `imports_from` | EXTRACTED | File imports specific names from a module |
+| `imports_from` | EXTRACTED | File imports names from a module |
 | `inherits` | EXTRACTED | Class inherits from another |
 | `calls` | INFERRED | Function calls another function |
 
-## Claude Code Skill
+## Capabilities
 
-graphify-ts ships as a Claude Code skill. Use `/graphify` to build, query, and update the index from within Claude Code.
+The skill exposes these to the agent:
 
-See [skill.md](./skill.md) for the full skill definition.
+| Function | Purpose |
+|----------|---------|
+| `buildIndex(dir)` | Full AST scan → graph.json |
+| `query(graphPath, name)` | Symbol search (case-insensitive) |
+| `updateIndex(graphPath, files)` | Incremental re-extraction |
+| `findSymbol(graph, name)` | Find nodes by label |
+| `callersOf(graph, nodeId)` | Who calls this function? |
+| `calleesOf(graph, nodeId)` | What does this function call? |
+| `fileSymbols(graph, file)` | All symbols in a file |
+| `shortestPath(graph, a, b)` | How are two symbols connected? |
+| `graphDiff(old, new)` | What changed between snapshots? |
+| `labelNodes(graph, labeler)` | Assign semantic domain labels |
 
 ## Architecture
 
@@ -201,35 +111,26 @@ src/
 ├── detect.ts         # File discovery + classification
 ├── cache.ts          # SHA256 incremental cache
 ├── extract.ts        # Generic tree-sitter AST extraction engine
-├── languages/        # Per-language configs (12 languages)
-│   ├── types.ts      # LanguageConfig interface
-│   ├── index.ts      # Language registry
-│   ├── python.ts     # Python config + import handler
-│   ├── javascript.ts # JS/TS config + arrow function handler
-│   └── ...           # Go, Rust, Java, C/C++, Ruby, C#, Kotlin, Scala, PHP
+├── languages/        # Per-language LanguageConfig (12 languages)
 ├── graph.ts          # graphology graph build/merge/serialize
 ├── query.ts          # Symbol search, callers, callees, shortest path
 ├── diff.ts           # Graph snapshot comparison
-└── semantic.ts       # LLM semantic labeling
+└── semantic.ts       # Pluggable semantic labeling interface
 ```
 
-**Key dependencies:**
-- `web-tree-sitter` (0.24.7) — WASM-based AST parsing
-- `tree-sitter-wasms` — Pre-built WASM grammars for 12 languages
-- `graphology` — Graph data structure
-- `@anthropic-ai/sdk` — Claude API for semantic labeling
+**Dependencies:** `web-tree-sitter` (0.24.7), `tree-sitter-wasms`, `graphology`
+
+## Docs
+
+- [Getting Started](./docs/getting-started.md) | [快速入门](./docs/getting-started.zh-CN.md)
+- [Advanced Usage](./docs/advanced-usage.md) | [高级用法](./docs/advanced-usage.zh-CN.md)
+- [Claude Code Integration](./docs/claude-code-integration.md) | [Claude Code 集成](./docs/claude-code-integration.zh-CN.md)
+- [Adding Languages](./docs/adding-languages.md) | [添加语言支持](./docs/adding-languages.zh-CN.md)
 
 ## Development
 
 ```bash
-# Install dependencies
-bun install
-
-# Run tests
-bun test
-
-# Run a specific test
-bun test tests/languages/python.test.ts
+bun install && bun test   # 70 tests, 12 languages
 ```
 
 ## License

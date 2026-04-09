@@ -44,7 +44,7 @@ Incrementally update the graph after editing files.
 
 Run LLM semantic labeling on the graph. Assigns domain labels (e.g. "authentication", "database", "api") to code symbols using Claude.
 
-Requires `ANTHROPIC_API_KEY` environment variable.
+The agent itself acts as the labeler — analyze each symbol's name, context, and neighbors to assign labels.
 
 ## Supported Languages
 

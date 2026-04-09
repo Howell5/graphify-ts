@@ -54,13 +54,20 @@ Enrich the graph with domain labels using Claude.
 
 ### Basic Usage
 
+`labelNodes` accepts any function matching the `SemanticLabeler` interface. When running inside Claude Code, the agent itself provides the labeling logic — no API key needed.
+
 ```typescript
-import { labelNodes, createClaudeLabeler } from 'graphify-ts'
+import { labelNodes, type SemanticLabeler } from 'graphify-ts'
 
-// Create a labeler that calls Claude
-const labeler = createClaudeLabeler()  // uses ANTHROPIC_API_KEY env var
+const labeler: SemanticLabeler = async (nodes) => {
+  const labels = new Map<string, string[]>()
+  for (const node of nodes) {
+    // Your logic here — heuristics, LLM calls, etc.
+    if (node.label.includes('auth')) labels.set(node.id, ['authentication'])
+  }
+  return labels
+}
 
-// Label all unlabeled nodes
 await labelNodes(graph, labeler)
 ```
 

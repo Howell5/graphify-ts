@@ -248,4 +248,5 @@ export { buildGraph, mergeExtractions, serializeGraph, deserializeGraph } from "
 export { findSymbol, callersOf, calleesOf, fileSymbols, shortestPath } from "./query";
 export { graphDiff } from "./diff";
 export type { GraphDiff } from "./diff";
-export { labelNodes, createClaudeLabeler } from "./semantic";
+export { labelNodes } from "./semantic";
+export type { SemanticLabeler, NodeSummary } from "./semantic";

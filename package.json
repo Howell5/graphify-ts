@@ -10,7 +10,6 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.86.1",
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
     "graphology-shortest-path": "^2.1.0",

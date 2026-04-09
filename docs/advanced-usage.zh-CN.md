@@ -54,13 +54,20 @@ const path = shortestPath(graph, 'main::app', 'utils::helper')
 
 ### 基本用法
 
+`labelNodes` 接受任何符合 `SemanticLabeler` 接口的函数。在 Claude Code 中运行时，agent 自身提供标注逻辑——不需要 API key。
+
 ```typescript
-import { labelNodes, createClaudeLabeler } from 'graphify-ts'
+import { labelNodes, type SemanticLabeler } from 'graphify-ts'
 
-// 创建一个调用 Claude 的标注器
-const labeler = createClaudeLabeler()  // 使用 ANTHROPIC_API_KEY 环境变量
+const labeler: SemanticLabeler = async (nodes) => {
+  const labels = new Map<string, string[]>()
+  for (const node of nodes) {
+    // 你的逻辑——启发式规则、LLM 调用等
+    if (node.label.includes('auth')) labels.set(node.id, ['authentication'])
+  }
+  return labels
+}
 
-// 标注所有未标注的节点
 await labelNodes(graph, labeler)
 ```
 
