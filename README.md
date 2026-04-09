@@ -39,41 +39,34 @@ No API keys. No external services. The agent IS the runtime.
 
 ## Installation
 
-### Via skills.sh (recommended)
+### 1. Install the CLI
 
 ```bash
+npm i -g graphify-ts
+```
+
+Requires [Bun](https://bun.sh) runtime.
+
+### 2. Install the skill (tells your agent how to use the CLI)
+
+```bash
+# Claude Code, Cursor, Cline, Copilot — pick your agent
 npx skills add Howell5/willhong-skills -s graphify
+
+# Or all agents at once
+npx skills add Howell5/willhong-skills -s graphify -a '*'
 ```
 
-This installs the graphify skill into your agent's skill directory. On first use, run `bun install` inside the skill directory to fetch tree-sitter WASM grammars.
+That's it. The agent now knows `/graphify build`, `/graphify query`, `/graphify update`.
 
-### Per-agent setup
-
-| Agent | Install | Invoke |
-|-------|---------|--------|
-| **Claude Code** | `npx skills add Howell5/willhong-skills -s graphify` | `/graphify build` |
-| **Cursor** | `npx skills add Howell5/willhong-skills -s graphify -a cursor` | `/graphify build` |
-| **Cline** | `npx skills add Howell5/willhong-skills -s graphify -a cline` | `/graphify build` |
-| **Copilot** | `npx skills add Howell5/willhong-skills -s graphify -a copilot` | `/graphify build` |
-| **All agents** | `npx skills add Howell5/willhong-skills -s graphify -a '*'` | `/graphify build` |
-
-### Manual install
+## CLI
 
 ```bash
-git clone https://github.com/Howell5/graphify-ts.git ~/.claude/skills/graphify
-cd ~/.claude/skills/graphify && bun install
+graphify build [dir]                    # Index a directory (default: .)
+graphify query <graph.json> <name>      # Search symbols by name
+graphify update <graph.json> <files...> # Re-index changed files
+graphify help                           # Show help
 ```
-
-## Commands
-
-```
-/graphify build         — index the current project
-/graphify query <name>  — find symbols by name
-/graphify update <file> — re-index after editing
-/graphify label         — agent assigns semantic domain labels
-```
-
-See [skill.md](./skill.md) for the full skill definition.
 
 ## Supported Languages
 

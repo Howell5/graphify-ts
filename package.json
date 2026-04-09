@@ -1,13 +1,34 @@
 {
   "name": "graphify-ts",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "description": "Code navigation layer for AI agents — AST extraction from 12 languages via tree-sitter WASM",
   "type": "module",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "^1.3.11"
+  "bin": {
+    "graphify": "src/cli.ts"
   },
-  "peerDependencies": {
-    "typescript": "^6.0.2"
+  "main": "src/index.ts",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "bun test"
+  },
+  "keywords": [
+    "ai-agent",
+    "code-navigation",
+    "knowledge-graph",
+    "tree-sitter",
+    "ast",
+    "claude-code",
+    "skill"
+  ],
+  "author": "howell5",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Howell5/graphify-ts.git"
   },
   "dependencies": {
     "graphology": "^0.26.0",
@@ -16,5 +37,11 @@
     "graphology-types": "^0.24.8",
     "tree-sitter-wasms": "^0.1.13",
     "web-tree-sitter": "0.24.7"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.11"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.2"
   }
 }

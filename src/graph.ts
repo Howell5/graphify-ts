@@ -19,7 +19,9 @@ export function buildGraph(extraction: ExtractionResult): Graph {
     const { source, target, ...attrs } = edge;
     if (!g.hasNode(source) || !g.hasNode(target)) continue;
     // Store original direction as _src/_tgt for reference
-    g.addEdge(source, target, { ...attrs, _src: source, _tgt: target });
+    if (!g.hasEdge(source, target)) {
+      g.addEdge(source, target, { ...attrs, _src: source, _tgt: target });
+    }
   }
 
   return g;

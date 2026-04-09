@@ -39,41 +39,34 @@ Agent 编辑了 src/auth.ts
 
 ## 安装
 
-### 通过 skills.sh（推荐）
+### 1. 安装 CLI
 
 ```bash
+npm i -g graphify-ts
+```
+
+需要 [Bun](https://bun.sh) 运行时。
+
+### 2. 安装 skill（告诉你的 agent 如何使用 CLI）
+
+```bash
+# Claude Code, Cursor, Cline, Copilot — 选择你的 agent
 npx skills add Howell5/willhong-skills -s graphify
+
+# 或者一次安装到所有 agent
+npx skills add Howell5/willhong-skills -s graphify -a '*'
 ```
 
-这会将 graphify skill 安装到你的 agent skill 目录。首次使用时，在 skill 目录下运行 `bun install` 以获取 tree-sitter WASM 语法包。
+搞定。Agent 现在知道 `/graphify build`、`/graphify query`、`/graphify update`。
 
-### 各 Agent 安装方式
-
-| Agent | 安装 | 调用 |
-|-------|------|------|
-| **Claude Code** | `npx skills add Howell5/willhong-skills -s graphify` | `/graphify build` |
-| **Cursor** | `npx skills add Howell5/willhong-skills -s graphify -a cursor` | `/graphify build` |
-| **Cline** | `npx skills add Howell5/willhong-skills -s graphify -a cline` | `/graphify build` |
-| **Copilot** | `npx skills add Howell5/willhong-skills -s graphify -a copilot` | `/graphify build` |
-| **所有 Agent** | `npx skills add Howell5/willhong-skills -s graphify -a '*'` | `/graphify build` |
-
-### 手动安装
+## CLI
 
 ```bash
-git clone https://github.com/Howell5/graphify-ts.git ~/.claude/skills/graphify
-cd ~/.claude/skills/graphify && bun install
+graphify build [dir]                    # 索引目录（默认: .）
+graphify query <graph.json> <name>      # 按名称搜索符号
+graphify update <graph.json> <files...> # 重新索引变更的文件
+graphify help                           # 显示帮助
 ```
-
-## 命令
-
-```
-/graphify build         — 索引当前项目
-/graphify query <name>  — 按名称查找符号
-/graphify update <file> — 编辑后重新索引
-/graphify label         — Agent 分配语义领域标签
-```
-
-详见 [skill.md](./skill.md)。
 
 ## 支持的语言
 
