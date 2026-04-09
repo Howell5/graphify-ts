@@ -1,3 +1,5 @@
+[English](./README.md) | 简体中文
+
 # graphify-ts
 
 面向 AI Agent 的代码导航层。通过 tree-sitter WASM 从 12 种编程语言中提取 AST 结构，构建可查询的知识图谱，并在代码变更时保持同步。

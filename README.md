@@ -1,3 +1,5 @@
+English | [简体中文](./README.zh-CN.md)
+
 # graphify-ts
 
 A code navigation layer for AI agents. Extracts AST structure from 12 programming languages via tree-sitter WASM, builds a queryable knowledge graph, and keeps it in sync as code changes.
