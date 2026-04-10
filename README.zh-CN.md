@@ -57,14 +57,30 @@ npx skills add Howell5/willhong-skills -s graphify
 npx skills add Howell5/willhong-skills -s graphify -a '*'
 ```
 
-搞定。Agent 现在知道 `/graphify build`、`/graphify query`、`/graphify update`。
+### 3. 启用自动更新（推荐）
+
+```bash
+graphify hook install
+```
+
+这会在 `~/.claude/settings.json` 中安装一个 Stop hook。每次 Claude Code 会话结束后，图谱会基于 `git diff` 自动更新——agent 不需要记住。运行 `graphify hook uninstall` 可以移除。
+
+### 4. 每个项目
+
+```bash
+graphify build .
+```
+
+搞定。Agent 现在知道 `/graphify build`、`/graphify query`，图谱会持续保持同步。
 
 ## CLI
 
 ```bash
 graphify build [dir]                    # 索引目录（默认: .）
 graphify query <graph.json> <name>      # 按名称搜索符号
-graphify update <graph.json> <files...> # 重新索引变更的文件
+graphify update <graph.json> <files...> # 手动增量更新
+graphify auto-update [dir]              # 通过 git diff 自动更新（hook 使用）
+graphify hook install|uninstall|status  # 管理 Claude Code Stop hook
 graphify help                           # 显示帮助
 ```
 

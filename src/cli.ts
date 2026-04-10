@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 import { buildIndex, query, updateIndex } from "./index";
+import { autoUpdate } from "./autoUpdate";
+import { installHook, uninstallHook, hookStatus, defaultSettingsPath } from "./hook";
 import { resolve, join } from "node:path";
 
 const args = process.argv.slice(2);
@@ -12,6 +14,10 @@ Usage:
   graphify build [dir]                    Build index for a directory (default: .)
   graphify query <graph.json> <name>      Search for symbols by name
   graphify update <graph.json> <files...> Incrementally update after edits
+  graphify auto-update [dir]              Auto-update via git diff (for hooks)
+  graphify hook install                   Install Claude Code stop hook
+  graphify hook uninstall                 Uninstall Claude Code stop hook
+  graphify hook status                    Show hook installation status
   graphify help                           Show this help
 
 Output:
@@ -63,6 +69,41 @@ async function main(): Promise<void> {
     const result = await updateIndex(resolve(graphPath), files.map(resolve));
     console.log(`Updated: +${result.added} nodes, -${result.removed} nodes, ${result.updated} files re-extracted`);
     return;
+  }
+
+  if (command === "auto-update") {
+    const dir = resolve(args[1] ?? ".");
+    const result = await autoUpdate(dir);
+    // Silent on non-actionable states so stop hooks don't spam.
+    if (result.status === "updated") {
+      console.log(`graphify: +${result.added}/-${result.removed} (${result.changedFiles.length} file${result.changedFiles.length !== 1 ? "s" : ""})`);
+    } else if (result.status === "error") {
+      console.error(`graphify: auto-update failed — ${result.error}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (command === "hook") {
+    const sub = args[1];
+    if (sub === "install") {
+      await installHook();
+      console.log(`graphify: stop hook installed in ${defaultSettingsPath()}`);
+      console.log(`  Graph will auto-update after each Claude Code session.`);
+      return;
+    }
+    if (sub === "uninstall") {
+      await uninstallHook();
+      console.log(`graphify: stop hook removed from ${defaultSettingsPath()}`);
+      return;
+    }
+    if (sub === "status") {
+      const status = await hookStatus();
+      console.log(`graphify hook: ${status} (${defaultSettingsPath()})`);
+      return;
+    }
+    console.error("Usage: graphify hook <install|uninstall|status>");
+    process.exit(1);
   }
 
   console.error(`Unknown command: ${command}`);

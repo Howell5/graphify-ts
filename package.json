@@ -1,6 +1,6 @@
 {
   "name": "graphify-ts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Code navigation layer for AI agents — AST extraction from 12 languages via tree-sitter WASM",
   "type": "module",
   "bin": {

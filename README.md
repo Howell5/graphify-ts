@@ -57,14 +57,30 @@ npx skills add Howell5/willhong-skills -s graphify
 npx skills add Howell5/willhong-skills -s graphify -a '*'
 ```
 
-That's it. The agent now knows `/graphify build`, `/graphify query`, `/graphify update`.
+### 3. Enable auto-update (recommended)
+
+```bash
+graphify hook install
+```
+
+This installs a Stop hook in `~/.claude/settings.json`. After every Claude Code session, the graph updates automatically based on `git diff` — the agent never needs to remember. Run `graphify hook uninstall` to remove.
+
+### 4. Per project
+
+```bash
+graphify build .
+```
+
+That's it. The agent now knows `/graphify build`, `/graphify query`, and the graph stays current.
 
 ## CLI
 
 ```bash
 graphify build [dir]                    # Index a directory (default: .)
 graphify query <graph.json> <name>      # Search symbols by name
-graphify update <graph.json> <files...> # Re-index changed files
+graphify update <graph.json> <files...> # Manual incremental update
+graphify auto-update [dir]              # Auto-update via git diff (what the hook runs)
+graphify hook install|uninstall|status  # Manage Claude Code Stop hook
 graphify help                           # Show help
 ```
 
