@@ -18,6 +18,14 @@ npx skills add Howell5/willhong-skills -s graphify
 
 不装 skill 也可以直接用 CLI。
 
+## 启用自动更新（推荐）
+
+```bash
+graphify hook install
+```
+
+这会安装一个 Claude Code Stop hook。每次会话结束后，图谱会基于 `git diff` 自动更新——你不再需要手动重新索引。运行 `graphify hook uninstall` 可以移除。
+
 ## 构建第一个索引
 
 ```bash
@@ -47,7 +55,9 @@ UserService → src/services/user.ts:12
 
 ## 编辑后更新
 
-编辑文件后，只重新索引变更的文件：
+如果你装了 Stop hook（`graphify hook install`），**什么都不用做**——图谱会在每次 Claude Code 会话结束时自动更新。
+
+手动更新（没装 hook，或需要中途强制同步）：
 
 ```bash
 graphify update graphify-out/graph.json src/services/user.ts
@@ -86,12 +96,11 @@ Updated: +2 nodes, -1 nodes, 1 files re-extracted
 安装 skill 后，agent 可以使用斜杠命令：
 
 ```
-/graphify build         — 索引当前项目
+/graphify build         — 索引当前项目（仅首次）
 /graphify query auth    — 查找认证相关符号
-/graphify update file   — 编辑后重新索引
 ```
 
-Agent 通过结构导航，而不是靠 grep 猜测。
+装了 Stop hook（`graphify hook install`）后，agent 永远不需要手动更新索引——它只负责查询，图谱会自动保持最新。
 
 ## 下一步
 

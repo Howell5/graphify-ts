@@ -18,6 +18,14 @@ npx skills add Howell5/willhong-skills -s graphify
 
 Without the skill, you (or your agent) can still use the CLI directly.
 
+## Enable Auto-Update (recommended)
+
+```bash
+graphify hook install
+```
+
+This installs a Claude Code Stop hook. After every session, the graph updates automatically based on `git diff` — you never need to manually re-index after editing. Run `graphify hook uninstall` to remove.
+
 ## Build Your First Index
 
 ```bash
@@ -45,9 +53,11 @@ UserService → src/services/user.ts:12
 .deleteUser → src/services/user.ts:28
 ```
 
-## Update After Edits
+## Updating After Edits
 
-After editing files, re-index only the changed ones:
+If you installed the Stop hook (`graphify hook install`), **you don't need to do anything** — the graph updates automatically at the end of each Claude Code session.
+
+For manual updates (no hook, or mid-session force sync):
 
 ```bash
 graphify update graphify-out/graph.json src/services/user.ts
@@ -86,12 +96,11 @@ And these relationships:
 Once the skill is installed, your agent can use slash commands:
 
 ```
-/graphify build         — index the current project
+/graphify build         — index the current project (first time only)
 /graphify query auth    — find auth-related symbols
-/graphify update file   — re-index after editing
 ```
 
-The agent navigates by structure instead of grep-guessing.
+With the Stop hook installed (`graphify hook install`), the agent never needs to manually update the index — it just navigates by querying, and the graph stays current automatically.
 
 ## Next Steps
 
