@@ -9,23 +9,29 @@ import type {
   ExtractionResult,
 } from "./languages/types";
 
-// Parser singleton — initialized once
-let parserReady = false;
+// Parser singleton — initialized once. Cache the in-flight promise rather than
+// a boolean so that concurrent callers (e.g. Promise.all over many files during
+// buildIndex) single-flight the one-time Parser.init instead of racing on it.
+// Racing here would call Parser.init many times in parallel, throwing and
+// yielding 0 symbols on large repos.
+let parserInit: Promise<void> | null = null;
 
-async function ensureParser(): Promise<void> {
-  if (parserReady) return;
+function ensureParser(): Promise<void> {
+  if (parserInit) return parserInit;
   const wasmPath = join(
     dirname(require.resolve("web-tree-sitter")),
     "tree-sitter.wasm",
   );
-  await Parser.init({ locateFile: () => wasmPath });
-  parserReady = true;
+  parserInit = Parser.init({ locateFile: () => wasmPath });
+  return parserInit;
 }
 
-// Cache loaded languages to avoid reloading WASM files
-const languageCache = new Map<string, Parser.Language>();
+// Cache loaded languages to avoid reloading WASM files. Cache the in-flight
+// promise (not the resolved Language) so concurrent callers for the same
+// grammar share a single load instead of racing to load it repeatedly.
+const languageCache = new Map<string, Promise<Parser.Language>>();
 
-async function loadLanguage(wasmFile: string): Promise<Parser.Language> {
+function loadLanguage(wasmFile: string): Promise<Parser.Language> {
   const cached = languageCache.get(wasmFile);
   if (cached) return cached;
 
@@ -34,8 +40,10 @@ async function loadLanguage(wasmFile: string): Promise<Parser.Language> {
     "out",
     wasmFile,
   );
-  const lang = await Parser.Language.load(wasmPath);
+  const lang = Parser.Language.load(wasmPath);
   languageCache.set(wasmFile, lang);
+  // Don't cache a failed load — keep it retryable.
+  lang.catch(() => languageCache.delete(wasmFile));
   return lang;
 }
 
